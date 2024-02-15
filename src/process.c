@@ -1,0 +1,284 @@
+/*-----------------------------------------------------------------*/
+/**
+
+  @file   process.c
+  @author Flávio M.
+  @brief  Creates process for using in scheduler's simulatiors
+ */
+/*-----------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------
+                              Includes
+  -----------------------------------------------------------------*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <time.h>
+#include "process.h"
+#include "error-handler.h"
+
+/*-----------------------------------------------------------------
+                  Internal Functions Declarations
+  -----------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Print all information from a process 
+   @param Process* Current process struct
+*/
+/*-----------------------------------------------------------------*/
+void printProcess(Process*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Print all information from a ProcessNode
+   @param ProcessNode* Current ProcessNode struct
+*/
+/*-----------------------------------------------------------------*/
+void printProcessNode(ProcessNode*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Allocate a new ProcessNode Struct. 
+          Defines PPID randonly.
+		  Set HIGH priority and NOT_ALIVE status by default.
+   @param Process* Current process struct
+*/
+/*-----------------------------------------------------------------*/
+ProcessNode* createProcessNode(Process*, uint16_t);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Free a ProcessNode struct
+   @param ProcessNode* Current ProcessNode struct
+*/
+/*-----------------------------------------------------------------*/
+void freeProcessNode(ProcessNode*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Free a Process struct
+   @param Process* Current Process struct
+*/
+/*-----------------------------------------------------------------*/
+void freeProcess(Process*);
+
+
+/*-----------------------------------------------------------------
+                      Functions Implementation
+  -----------------------------------------------------------------*/
+ProcessList* createProcessList(Process** processArr, uint16_t totalProcess) {
+
+	ProcessList* queue = NULL;
+	ProcessNode* node = NULL;
+
+	queue = createEmptyProcessList();
+
+	srand(time(NULL));  // Initiate random function
+
+	for (uint16_t i = 0; i < totalProcess; i++) {
+		node = createProcessNode(processArr[i], i);
+	    addNodeToList(queue, node);
+	}
+
+	return queue;
+}
+
+Process* createProcess(unsigned int cpuTime, 
+					   unsigned int creationTime,
+					   IO_types* IoAccess,
+					   unsigned int* IoTime,
+					   unsigned int totalAccess) {
+
+	ProcessIO* ioList;
+	Process* newProcess = (Process*) malloc(sizeof(Process));
+	checkNullPointer((void*) newProcess);
+
+	newProcess -> cpuTime = cpuTime;
+	newProcess -> creationTime = creationTime;
+	
+	newProcess -> ioList = (ProcessIO*) malloc(sizeof(ProcessIO));
+	checkNullPointer((void*) newProcess -> ioList);
+
+	ioList = newProcess -> ioList;
+
+	ioList -> IoAccess = (IO_types*) malloc(sizeof(IO_types) * totalAccess);
+	checkNullPointer((void*) ioList -> IoAccess);
+
+	ioList -> IoTime = (unsigned int*) malloc((sizeof(unsigned int) * totalAccess));
+	checkNullPointer((void*) ioList -> IoTime);
+	
+	for(int i = 0; i < totalAccess; i++) {
+		ioList -> IoAccess[i] = IoAccess[i];
+		ioList -> IoTime[i] = IoTime[i];
+	}
+
+	ioList -> totalIO = totalAccess;
+
+	return newProcess;
+}
+
+void printProcess(Process* process) {
+
+	ProcessIO* ioList = process -> ioList;
+
+	printf("PID: %d\n", process -> pid);
+	printf("PPID: %d\n", process -> ppid);
+	printf("CPU TIME: %d\n", process -> cpuTime);
+	printf("CREATION TIME: %d\n", process -> creationTime);
+	printf("IO: ");
+
+	for(int i = 0; i < ioList -> totalIO; i++) {
+		switch(ioList -> IoAccess[i]) {
+		    case DISK:
+				printf("DISK IN %d\n", ioList -> IoTime[i]);
+				break;
+
+		    case TAPE:
+				printf("TAPE IN %d\n", ioList -> IoTime[i]);
+				break;
+
+		    case PRINTER:
+				printf("PRINTER IN %d\n", ioList -> IoTime[i]);
+				break;
+		}
+	}
+	
+	puts("");
+}
+
+void printProcessNode(ProcessNode* processNode) {
+	
+	printProcess(processNode -> process);
+	printf("TIME UNTIL EXEC: %d\n", processNode -> timeUntilExec);
+	
+	printf("PRIORITY: ");
+	switch(processNode -> priority) {
+		case HIGH:
+			printf("HIGH\n");
+			break;
+
+		case LOW:
+			printf("LOW\n");
+			break;
+	}
+
+	printf("STATUS: ");
+	switch(processNode -> status) {
+		case RUNNING:
+			printf("RUNNING\n");
+			break;
+	
+	    case BLOCKED:
+			printf("BLOCKED\n");
+			break;
+
+	    case FINISHED:
+			printf("FINISHED\n");
+			break;
+	
+		case READY:
+			printf("READY\n");
+			break;
+
+		case NOT_ALIVE:
+			printf("NOT ALIVE\n");
+			break;
+	}
+
+	printf("IO'S FINISHED: %d\n", processNode -> finishedIO);
+	printf("TIME EXECUTED IN CPU: %d\n", processNode -> executionTime);
+
+	puts("\n");
+}
+
+ProcessList* createEmptyProcessList() {
+	
+	ProcessList* newQueue = (ProcessList*) malloc(sizeof(ProcessList*));
+	checkNullPointer((void*) newQueue);
+
+	newQueue -> head = NULL;
+	newQueue -> tail = NULL;
+
+	return newQueue;
+}
+
+
+ProcessNode* createProcessNode(Process* process, uint16_t pid) {
+
+	ProcessNode* newNode = (ProcessNode*) malloc(sizeof(ProcessNode));
+	checkNullPointer((void*) newNode);
+
+	process -> pid = pid;
+	process -> ppid = (pid == 0) ? 0 : rand() % pid;
+
+	newNode -> process = process;
+	newNode -> timeUntilExec = 0;
+	newNode -> priority = HIGH;
+	newNode -> status = NOT_ALIVE;
+	newNode -> finishedIO = 0;
+	newNode -> executionTime = 0;
+	newNode -> prev = NULL;
+	newNode -> next = NULL;
+
+	return newNode;
+}
+
+void addNodeToList(ProcessList* queue, ProcessNode* node) {
+
+	ProcessNode* aux = queue -> head;
+
+	if(!aux) {
+		queue -> head = node;
+		queue -> tail = node;
+	} else {
+	    node -> prev = queue -> tail;
+		queue -> tail -> next = node;
+		queue -> tail = node;
+	}
+}
+
+void printProccesList(ProcessList* queue) {
+	
+	ProcessNode* aux = queue -> head;
+
+	while(aux) {
+		printProcessNode(aux);
+		aux = aux -> next;
+	}
+}
+
+
+void freeProcessList(ProcessList* queue) {
+
+	ProcessNode* aux = queue -> head;
+	ProcessNode* temp;
+
+	while(aux) {
+		temp = aux -> next;
+		freeProcessNode(aux);
+		aux = temp;
+	}
+
+	free(queue);
+}
+
+void freeProcessNode(ProcessNode* node) {
+
+	freeProcess(node -> process);
+	free(node);
+}
+
+void freeProcess(Process* process) {
+
+	ProcessIO* ioList = process -> ioList;
+
+	free(ioList -> IoAccess);
+	free(ioList -> IoTime);
+	free(ioList);
+	free(process);
+}

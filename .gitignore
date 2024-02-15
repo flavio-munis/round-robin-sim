@@ -1,0 +1,15 @@
+# File Executables
+scheduler-sim
+test-scheduler-sim
+
+# Emacs Auto Save Files
+*~
+
+# Object Files
+obj/*
+
+# Core dump Files
+core.*
+
+# Test Files
+tests/*
