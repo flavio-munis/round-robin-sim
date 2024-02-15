@@ -12,4 +12,4 @@ obj/*
 core.*
 
 # Test Files
-tests/*
+#tests/*
