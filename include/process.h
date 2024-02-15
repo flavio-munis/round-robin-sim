@@ -149,3 +149,12 @@ void printProccesList(ProcessList*);
 */
 /*-----------------------------------------------------------------*/
 void freeProcessList(ProcessList*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Free a Process struct
+   @param Process* Current Process struct
+*/
+/*-----------------------------------------------------------------*/
+void freeProcess(Process*);

@@ -59,15 +59,6 @@ ProcessNode* createProcessNode(Process*, uint16_t);
 void freeProcessNode(ProcessNode*);
 
 
-/*-----------------------------------------------------------------*/
-/**
-   @brief Free a Process struct
-   @param Process* Current Process struct
-*/
-/*-----------------------------------------------------------------*/
-void freeProcess(Process*);
-
-
 /*-----------------------------------------------------------------
                       Functions Implementation
   -----------------------------------------------------------------*/
@@ -78,7 +69,7 @@ ProcessList* createProcessList(Process** processArr, uint16_t totalProcess) {
 
 	queue = createEmptyProcessList();
 
-	srand(time(NULL));  // Initiate random function
+	srand(time(NULL));  // Initiate random function for ppid generation
 
 	for (uint16_t i = 0; i < totalProcess; i++) {
 		node = createProcessNode(processArr[i], i);
