@@ -74,6 +74,7 @@ typedef struct process_node {
 typedef struct process_list {
 	ProcessNode* head;
 	ProcessNode* tail;
+	uint16_t totalProcess;       // Total Process in List
 }ProcessList;
 
 
@@ -131,6 +132,16 @@ ProcessList* createEmptyProcessList();
 */
 /*-----------------------------------------------------------------*/
 void addNodeToList(ProcessList*, ProcessNode*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Remove a Node to the end of the Queue
+   @param ProcessList* Current queue.
+   @param uint16_t     PID for process to be removed.
+*/
+/*-----------------------------------------------------------------*/
+void removeNodeFromList(ProcessList*, uint16_t);
 
 
 /*-----------------------------------------------------------------*/

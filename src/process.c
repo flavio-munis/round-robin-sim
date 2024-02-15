@@ -194,6 +194,7 @@ ProcessList* createEmptyProcessList() {
 
 	newQueue -> head = NULL;
 	newQueue -> tail = NULL;
+	newQueue -> totalProcess = 0;
 
 	return newQueue;
 }
@@ -231,11 +232,49 @@ void addNodeToList(ProcessList* queue, ProcessNode* node) {
 		queue -> tail -> next = node;
 		queue -> tail = node;
 	}
+	
+	queue -> totalProcess++;
+}
+
+void removeNodeFromList(ProcessList* queue, uint16_t pid) {
+	
+	ProcessNode* aux = queue -> head;
+
+	if(aux) {
+		if(aux -> process -> pid == pid) {
+			queue -> head = queue -> head -> next;
+			queue -> head -> prev = NULL;
+			
+			queue -> totalProcess--;
+			return;
+		}
+
+		if(queue -> tail -> process -> pid == pid) {
+			queue -> tail = queue -> tail -> prev;
+			queue -> tail -> next = NULL;
+			
+			queue -> totalProcess--;
+			return;
+		}
+
+		aux = aux -> next;
+
+		while(aux -> next) {
+			if(aux -> process -> pid == pid) {
+				aux -> prev -> next = aux -> next;
+				aux -> next -> prev = aux -> prev;
+			
+				queue -> totalProcess--;
+			}
+		}
+	}
 }
 
 void printProccesList(ProcessList* queue) {
 	
 	ProcessNode* aux = queue -> head;
+
+	printf("=== LIST HAS %d ELEMENTS ===\n\n", queue -> totalProcess);
 
 	while(aux) {
 		printProcessNode(aux);
