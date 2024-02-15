@@ -146,11 +146,20 @@ void removeNodeFromList(ProcessList*, uint16_t);
 
 /*-----------------------------------------------------------------*/
 /**
+   @brief Requeue the head of the list.
+   @param ProcessList* Current queue.
+*/
+/*-----------------------------------------------------------------*/
+void reQueue(ProcessList*);
+
+
+/*-----------------------------------------------------------------*/
+/**
    @brief Print all information about a queue.
    @param ProcessList* Current queue.
 */
 /*-----------------------------------------------------------------*/
-void printProccesList(ProcessList*);
+void printProcessList(ProcessList*);
 
 
 /*-----------------------------------------------------------------*/

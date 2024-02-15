@@ -270,7 +270,20 @@ void removeNodeFromList(ProcessList* queue, uint16_t pid) {
 	}
 }
 
-void printProccesList(ProcessList* queue) {
+
+void reQueue(ProcessList* queue) {
+
+	if(queue -> head) {
+		queue -> tail -> next = queue -> head;
+		queue -> tail = queue -> head;
+		queue -> head = queue -> tail -> next;
+		queue -> tail -> next = NULL;
+		queue -> head -> prev = NULL;
+	}
+}
+
+
+void printProcessList(ProcessList* queue) {
 	
 	ProcessNode* aux = queue -> head;
 
