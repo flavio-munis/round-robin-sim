@@ -301,10 +301,11 @@ void removeNodeFromList(ProcessList* queue, uint16_t pid) {
 		}
 
 		if(queue -> tail -> process -> pid == pid) {
+			aux = queue -> tail;
 			queue -> tail = queue -> tail -> prev;
 			queue -> tail -> next = NULL;
 			
-			resetNode(queue -> tail);
+			resetNode(aux);
 
 			queue -> totalProcess--;
 			return;
