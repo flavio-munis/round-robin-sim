@@ -136,21 +136,23 @@ void addNodeToList(ProcessList*, ProcessNode*);
 
 /*-----------------------------------------------------------------*/
 /**
-   @brief Remove a Node to the end of the Queue
-   @param ProcessList* Current queue.
-   @param uint16_t     PID for process to be removed.
-*/
-/*-----------------------------------------------------------------*/
-void removeNodeFromList(ProcessList*, uint16_t);
-
-
-/*-----------------------------------------------------------------*/
-/**
    @brief Requeue the head of the list.
    @param ProcessList* Current queue.
 */
 /*-----------------------------------------------------------------*/
 void reQueue(ProcessList*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Transfer a node from a queue to another.
+          Nodes are added at the end of queue.
+   @param ProcessList* Current queue 1
+   @param ProcessList* Current queue 2
+   @param uint16_t     PID for process to be removed.
+*/
+/*-----------------------------------------------------------------*/
+void transferNodeToList(ProcessList*, ProcessList*, uint16_t);
 
 
 /*-----------------------------------------------------------------*/

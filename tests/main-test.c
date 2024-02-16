@@ -10,8 +10,8 @@ void createProcessList_test3();
 int main() {
 	
 	createProcessList_test1();
-	createProcessList_test2();
-    createProcessList_test3();
+    createProcessList_test2();
+	createProcessList_test3();
 
 	return 0;
 }
@@ -52,7 +52,6 @@ void createProcessList_test1() {
 	free(timeIoOp);
 }
 
-
 void createProcessList_test2() {
 
 	ProcessList* queue;
@@ -82,7 +81,8 @@ void createProcessList_test2() {
 	queue = createProcessList(processArr, 3);
 	printProcessList(queue);
 
-	removeNodeFromList(queue, 2);
+	reQueue(queue);
+	reQueue(queue);
 	printProcessList(queue);
 
 	freeProcessList(queue);
@@ -93,39 +93,65 @@ void createProcessList_test2() {
 
 void createProcessList_test3() {
 
-	ProcessList* queue;
-	IO_types* IoOp;
-	unsigned int* timeIoOp;
-	Process** processArr; 
+	ProcessList* queue, *queue2;
+	IO_types* IoOp, *IoOp2;
+	unsigned int* timeIoOp, *timeIoOp2;
+	Process** processArr, **processArr2; 
 
 	processArr = (Process**) malloc(sizeof(Process*) * 3);
 	checkNullPointer((void*) processArr);
 
+	processArr2 = (Process**) malloc(sizeof(Process*) * 5);
+	checkNullPointer((void*) processArr2);
+
 	IoOp = (IO_types*) malloc(sizeof(IO_types) * 2);
 	checkNullPointer((void*) IoOp);
+
+	IoOp2 = (IO_types*) malloc(sizeof(IO_types) * 2);
+	checkNullPointer((void*) IoOp2);
 
 	timeIoOp = (unsigned int*) malloc(sizeof(unsigned int) * 2);
 	checkNullPointer((void*) timeIoOp);
 	
+	timeIoOp2 = (unsigned int*) malloc(sizeof(unsigned int) * 2);
+	checkNullPointer((void*) timeIoOp2);
+
 	IoOp[0] = DISK;
 	IoOp[1] = PRINTER;
 
+	IoOp2[0] = DISK;
+	IoOp2[1] = TAPE;
+
 	timeIoOp[0] = 1;
 	timeIoOp[1] = 3;
+
+	timeIoOp2[0] = 2;
+	timeIoOp2[1] = 3;
 
 	processArr[0] = createProcess(5, 0, IoOp, timeIoOp, 2);
 	processArr[1] = createProcess(7, 1, IoOp, timeIoOp, 2);
     processArr[2] = createProcess(9, 2, IoOp, timeIoOp, 2);
 
-	queue = createProcessList(processArr, 3);
-	printProcessList(queue);
+	processArr2[0] = createProcess(4, 0, IoOp2, timeIoOp2, 2);
+	processArr2[1] = createProcess(8, 1, IoOp2, timeIoOp2, 2);
+    processArr2[2] = createProcess(9, 2, IoOp2, timeIoOp2, 2);
+	processArr2[3] = createProcess(9, 2, IoOp2, timeIoOp2, 2);
+	processArr2[4] = createProcess(9, 2, IoOp2, timeIoOp2, 2);
 
-	reQueue(queue);
-	reQueue(queue);
+	queue = createProcessList(processArr, 3);
+	queue2 = createProcessList(processArr2, 5);
+
+	transferNodeToList(queue2, queue, 5);
+	transferNodeToList(queue2, queue, 3);
+	transferNodeToList(queue2, queue, 4);
+	transferNodeToList(queue, queue2, 3);
 	printProcessList(queue);
+	printProcessList(queue2);
 
 	freeProcessList(queue);
+	freeProcessList(queue2);
 	free(processArr);
+	free(processArr2);
 	free(IoOp);
 	free(timeIoOp);
 }

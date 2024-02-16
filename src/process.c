@@ -52,6 +52,37 @@ ProcessNode* createProcessNode(Process*, uint16_t);
 
 /*-----------------------------------------------------------------*/
 /**
+   @brief Reset next and after to NULL in a ProcessNode
+   @param Process* Current process struct
+*/
+/*-----------------------------------------------------------------*/
+void resetNode(ProcessNode*);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Remove a Node to the end of the Queue
+   @param ProcessList* Current queue.
+   @param uint16_t     PID for process to be removed.
+*/
+/*-----------------------------------------------------------------*/
+void removeNodeFromList(ProcessList*, uint16_t);
+
+
+/*-----------------------------------------------------------------*/
+/**
+   @brief Find a process in the queue, 
+          IF the process can't be found than returns NULL.
+   @param  Process*     Current process struct
+   @param  uint16_t     PID of wanted process
+   @return ProcessNode* Process searched
+*/
+/*-----------------------------------------------------------------*/
+ProcessNode* getProcessNode(ProcessList*, uint16_t);
+
+
+/*-----------------------------------------------------------------*/
+/**
    @brief Free a ProcessNode struct
    @param ProcessNode* Current ProcessNode struct
 */
@@ -229,6 +260,7 @@ void addNodeToList(ProcessList* queue, ProcessNode* node) {
 		queue -> tail = node;
 	} else {
 	    node -> prev = queue -> tail;
+		node -> next = NULL;
 		queue -> tail -> next = node;
 		queue -> tail = node;
 	}
@@ -236,14 +268,33 @@ void addNodeToList(ProcessList* queue, ProcessNode* node) {
 	queue -> totalProcess++;
 }
 
+void resetNode(ProcessNode* process) {
+	
+	process -> next = NULL;
+	process -> prev = NULL;
+}
+
 void removeNodeFromList(ProcessList* queue, uint16_t pid) {
 	
 	ProcessNode* aux = queue -> head;
 
 	if(aux) {
+		
+		if(queue -> totalProcess == 1 && aux -> process -> pid == pid) {
+		    resetNode(aux);
+
+			queue -> head = NULL;
+			queue -> tail = NULL;
+
+			queue -> totalProcess--;
+			return;
+		}
+
 		if(aux -> process -> pid == pid) {
 			queue -> head = queue -> head -> next;
 			queue -> head -> prev = NULL;
+			
+			resetNode(aux);
 			
 			queue -> totalProcess--;
 			return;
@@ -253,6 +304,8 @@ void removeNodeFromList(ProcessList* queue, uint16_t pid) {
 			queue -> tail = queue -> tail -> prev;
 			queue -> tail -> next = NULL;
 			
+			resetNode(queue -> tail);
+
 			queue -> totalProcess--;
 			return;
 		}
@@ -264,8 +317,13 @@ void removeNodeFromList(ProcessList* queue, uint16_t pid) {
 				aux -> prev -> next = aux -> next;
 				aux -> next -> prev = aux -> prev;
 			
+				resetNode(aux);
+
 				queue -> totalProcess--;
+				return;
 			}
+
+			aux = aux -> next;
 		}
 	}
 }
@@ -280,6 +338,34 @@ void reQueue(ProcessList* queue) {
 		queue -> tail -> next = NULL;
 		queue -> head -> prev = NULL;
 	}
+}
+
+
+void transferNodeToList(ProcessList* source, ProcessList* dest, uint16_t pid) {
+
+	ProcessNode* process = getProcessNode(source, pid);
+
+	if(process){
+		removeNodeFromList(source, pid);
+		addNodeToList(dest, process);
+	}
+}
+
+
+ProcessNode* getProcessNode(ProcessList* queue, uint16_t pid) {
+	
+	ProcessNode* aux = queue -> head;
+
+	if(aux) {
+		while(aux) {
+			if(aux -> process -> pid == pid)
+				return aux;
+
+			aux = aux -> next;
+		}
+	}
+
+	return NULL;
 }
 
 
