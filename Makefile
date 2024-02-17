@@ -18,6 +18,7 @@ APP = ./app
 OBJ = ./obj
 INCLUDE = ./include
 TEST = ./tests
+OUTPUT = ./output
 
 # Files
 MAIN = ${APP}/main.c
@@ -28,11 +29,15 @@ C_HEADERS = $(wildcard ${INCLUDE}/*.h)
 C_SOURCE = $(wildcard ${SRC}/*.c)
 OBJ_SOURCE = $(subst .c,.o,$(subst $(SRC),$(OBJ), $(C_SOURCE)))
 
-all: ${OBJ} $(PROJECT_NAME)
+all: ${OBJ} $(OUTPUT) $(PROJECT_NAME)
 
 $(OBJ):
 	@ mkdir obj
-	@ echo "Object Folder Created"
+	@ echo "Object Folder Created!"
+
+$(OUTPUT):
+	@ mkdir output
+	@ echo "Output File Created!"
 
 $(PROJECT_NAME): $(OBJ_SOURCE) $(MAIN_OBJ)
 	@ echo 'Compiling Executable File...'
@@ -56,7 +61,7 @@ test: ${OBJ} ${TEST_NAME}
 $(TEST_NAME): ${OBJ_SOURCE} ${TEST_MAIN_OBJ}
 	@ echo 'Compiling Test File...'
 	@ $(CC) $^ -o $@
-	@ echo 'Finished Buildind Test Project'
+	@ echo 'Finished Buildind Test Project!'
 
 $(TEST_MAIN_OBJ): $(TEST_MAIN)
 	@ echo 'Building Test Main File: $@'
@@ -65,7 +70,7 @@ $(TEST_MAIN_OBJ): $(TEST_MAIN)
 
 
 # CLEAN COMMANDS
-clean: clean_obj clean_core
+clean: clean_obj clean_core clean_output
 
 clean_obj:
 	@ echo "Cleaning All Object Files..."
@@ -74,6 +79,10 @@ clean_obj:
 clean_core:
 	@ echo "Cleaning All Core Files..."
 	@ rm -f ./core*
+
+clean_output:
+	@ echo "Cleaning All Output Files..."
+	@ rm -rf output/
 
 
 # RUN PROGRAM
