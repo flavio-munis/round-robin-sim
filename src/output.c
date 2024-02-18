@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "cJSON.h"
 #include "process.h"
 #include "error-handler.h"
@@ -75,8 +76,11 @@ void writeProcessInfo(cJSON* buffer,
 				 unsigned int execTime) {
 	
 	cJSON* newBuffer = cJSON_CreateObject();
+	cJSON* timeBuffer, *arrayBuffer;
+	cJSON* element= NULL, *execTimeItem = NULL;
 	cJSON* IoAcessBuffer, *IoTimeBuffer, *temp;
     ProcessIO* ioList = process -> process -> ioList;
+    bool alreadyHasTime = false;
 
 	// Process Main Info
 	cJSON_AddNumberToObject(newBuffer, "pid", process -> process -> pid);
@@ -109,12 +113,33 @@ void writeProcessInfo(cJSON* buffer,
 							process -> finishedIO);
 	cJSON_AddNumberToObject(newBuffer, "process_time_executed", 
 							process -> executionTime);
-	cJSON_AddNumberToObject(newBuffer, "total_time_executed", execTime);
 
-	// Write to main buffer
-	cJSON_AddItemToObject(buffer, "process:", newBuffer);
+	// Check if time already exists in JSON
+	if(buffer -> child) {
+		cJSON_ArrayForEach(element, buffer) {
+		   execTimeItem = cJSON_GetObjectItem(element, "time_of_execution");
+
+		   if(execTimeItem -> valueint == execTime) {
+			   arrayBuffer = cJSON_GetObjectItem(element, "processes");
+			   cJSON_AddItemToArray(arrayBuffer, newBuffer);
+
+			   alreadyHasTime = true;
+		   }
+		}
+	}
+
+	// Write to main buffer if it's has not been written
+	if(!alreadyHasTime) {
+		timeBuffer = cJSON_CreateObject();
+		arrayBuffer = cJSON_CreateArray();
+		
+		cJSON_AddNumberToObject(timeBuffer, "time_of_execution", execTime);
+		cJSON_AddItemToArray(arrayBuffer, newBuffer);
+		cJSON_AddItemToObject(timeBuffer, "processes", arrayBuffer);
+		cJSON_AddItemToObject(buffer, "events", timeBuffer);
+	}
 }
- 
+
 char* ioToString(IO_types io) {
 
 	switch(io) {
@@ -167,3 +192,4 @@ char* statusToString(Process_status status) {
 
 	return "null";
 }
+
