@@ -13,3 +13,6 @@ core.*
 
 # Test Files
 #tests/*
+
+# Output Files
+*.json

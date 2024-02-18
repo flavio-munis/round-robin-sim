@@ -71,7 +71,7 @@ void writeToFile(cJSON *info){
 	free(jsonString);
 }
 
-void writeProcessInfo(cJSON* buffer, 
+void writeProcessInfo(cJSON** buffer, 
 				 ProcessNode* process, 
 				 unsigned int execTime) {
 	
@@ -81,6 +81,13 @@ void writeProcessInfo(cJSON* buffer,
 	cJSON* IoAcessBuffer, *IoTimeBuffer, *temp;
     ProcessIO* ioList = process -> process -> ioList;
     bool alreadyHasTime = false;
+
+	// If buffer is null create main object
+	if(!(*buffer)) {
+		*buffer = cJSON_CreateObject();
+		arrayBuffer = cJSON_CreateArray();
+		cJSON_AddItemToObject(*buffer, "events", arrayBuffer);
+	}
 
 	// Process Main Info
 	cJSON_AddNumberToObject(newBuffer, "pid", process -> process -> pid);
@@ -115,9 +122,9 @@ void writeProcessInfo(cJSON* buffer,
 							process -> executionTime);
 
 	// Check if time already exists in JSON
-	if(buffer -> child) {
-		cJSON_ArrayForEach(element, buffer) {
-		   execTimeItem = cJSON_GetObjectItem(element, "time_of_execution");
+	if((*buffer) -> child) {
+		cJSON_ArrayForEach(element, (*buffer) -> child) {
+			execTimeItem = cJSON_GetObjectItem(element, "time_of_execution");
 
 		   if(execTimeItem -> valueint == execTime) {
 			   arrayBuffer = cJSON_GetObjectItem(element, "processes");
@@ -132,11 +139,12 @@ void writeProcessInfo(cJSON* buffer,
 	if(!alreadyHasTime) {
 		timeBuffer = cJSON_CreateObject();
 		arrayBuffer = cJSON_CreateArray();
-		
+		execTimeItem = cJSON_GetObjectItem(*buffer, "events");
+
 		cJSON_AddNumberToObject(timeBuffer, "time_of_execution", execTime);
 		cJSON_AddItemToArray(arrayBuffer, newBuffer);
 		cJSON_AddItemToObject(timeBuffer, "processes", arrayBuffer);
-		cJSON_AddItemToObject(buffer, "events", timeBuffer);
+		cJSON_AddItemToArray(execTimeItem, timeBuffer);
 	}
 }
 

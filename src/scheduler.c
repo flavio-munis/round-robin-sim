@@ -190,7 +190,7 @@ Queues* initQueues() {
 	newQueues -> lowPri = createEmptyProcessList();
 	newQueues -> IO = createEmptyProcessList();
 	newQueues -> finished = createEmptyProcessList();
-	newQueues -> buffer = cJSON_CreateObject();
+	newQueues -> buffer = NULL;
 
 	return newQueues;
 }
@@ -217,7 +217,7 @@ void checkIfAlive(ProcessList* notAlive,
 							   queues -> highPri,
 							   aux -> process -> pid);
 
-			writeProcessInfo(queues -> buffer, aux, execTime);
+			writeProcessInfo(&(queues -> buffer), aux, execTime);
 			
 			aux = temp;
 			continue;
@@ -277,7 +277,7 @@ int executeProcess(Queues* queues,
 	pid = processToExec -> process -> pid;
 
 	// Write process info after its have been selected to be executed
-	writeProcessInfo(queues -> buffer, 
+	writeProcessInfo(&(queues -> buffer), 
 					 processToExec,
 					 executionTime);
 
@@ -287,7 +287,7 @@ int executeProcess(Queues* queues,
 
 		if(transfered) {
 			// Write process info if it reached the end of it's life
-			writeProcessInfo(queues -> buffer, 
+			writeProcessInfo(&(queues -> buffer), 
 							 processToExec, 
 							 executionTime + currCpuTime);
 			
@@ -314,7 +314,7 @@ int executeProcess(Queues* queues,
 
 	if(transfered) {
 		// Write process info if it reached the end of it's life
-		writeProcessInfo(queues -> buffer, 
+		writeProcessInfo(&(queues -> buffer), 
 						 processToExec, 
 						 executionTime + currCpuTime);
 		
@@ -332,7 +332,7 @@ int executeProcess(Queues* queues,
 	processToExec -> status = READY;
 
 	// Write process info after it's been executed in cpu
-	writeProcessInfo(queues -> buffer, 
+	writeProcessInfo(&(queues -> buffer), 
 					 processToExec, 
 					 executionTime + currCpuTime);
 
@@ -431,7 +431,7 @@ void updateIO(Queues* queues, unsigned int execTime) {
 			transfered = true;
 
 			// Write process info after it has been transfered from IO queue
-			writeProcessInfo(queues -> buffer, 
+			writeProcessInfo(&(queues -> buffer), 
 							 aux, 
 							 execTime);
 		}	

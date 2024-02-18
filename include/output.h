@@ -35,4 +35,4 @@ void writeToFile(cJSON*);
    @return ProcessList* Finished queue.
 */
 /*-----------------------------------------------------------------*/
-void writeProcessInfo(cJSON*, ProcessNode*, unsigned int);
+void writeProcessInfo(cJSON**, ProcessNode*, unsigned int);
