@@ -21,6 +21,7 @@
 #include "error-handler.h"
 
 
+
 /*-----------------------------------------------------------------
                   Internal Functions Declarations
   -----------------------------------------------------------------*/
@@ -460,12 +461,12 @@ void fromIOToExec(Queues* queues, uint16_t pid) {
 			aux -> status = READY;
 
 			switch(IoAccess[finishedIO]) {
-				case PRINTER:
 			    case DISK:
 					aux -> priority = LOW;
 					transferNodeToList(IO, lowPri, aux -> process -> pid);
 					break;
 				
+			    case PRINTER:
 			    case TAPE:
 					aux -> priority = HIGH;
 					transferNodeToList(IO, highPri, aux -> process -> pid);
