@@ -58,6 +58,18 @@ void checkIfAlive(ProcessList*, Queues*, unsigned int);
 
 /*-----------------------------------------------------------------*/
 /**
+   @brief Checks if there's a process to be executed
+   @param  Queues*       Scheduler queues 
+   @param  ProcessNode** Reference to the process that it will be
+                         executed
+   @return bool          If process is in high priority queue
+*/
+/*-----------------------------------------------------------------*/
+bool getProcessToExec(Queues*, ProcessNode**);
+
+
+/*-----------------------------------------------------------------*/
+/**
    @brief "Execute" a process for the defined QUANTUM of time and
           updates IO queue in real time.
           IF process realizes a IO operation during the QUANTUM of
@@ -67,11 +79,13 @@ void checkIfAlive(ProcessList*, Queues*, unsigned int);
 		  ELSE IF, process is in high priority queue, THAN, it will
 		  be transfered to Low Priority queue.
 		  ELSE, process will be requeud in the Low Priority queue.
-   @param Queues*      Algorithm queues
-   @param unsigned int Total time executed in CPU
+   @param  Queues*      Algorithm queues
+   @param  ProcessList* Not alive queue
+   @param  unsigned int Total time already executed in CPU
+   @return int          Time executed in CPU
 */
 /*-----------------------------------------------------------------*/
-int executeProcess(Queues*, unsigned int);
+int executeProcess(Queues*, ProcessList*, unsigned int);
 
 
 /*-----------------------------------------------------------------*/
@@ -154,14 +168,12 @@ void roundRobinAlgo(ProcessList* notAlive) {
 	
 	unsigned int execTime = 0;
 	Queues* queues = initQueues();
+    
+	// Check if there's processes alive at time 0
+	checkIfAlive(notAlive, queues, execTime);
 
-	while(getTotalProcessLeft(queues, notAlive) > 0) {
-
-		if(notAlive -> totalProcess > 0)
-			checkIfAlive(notAlive, queues, execTime);
-		
-	    execTime += executeProcess(queues, execTime);
-	}
+	while(getTotalProcessLeft(queues, notAlive) > 0) 
+	    execTime += executeProcess(queues, notAlive, execTime);
 
 	writeToFile(queues -> buffer);
 
@@ -214,24 +226,50 @@ void checkIfAlive(ProcessList* notAlive,
 	}	
 }
 
-int executeProcess(Queues* queues, unsigned int executionTime) {
+bool getProcessToExec(Queues* queues, ProcessNode** processToExec) {
+	
+	ProcessList* highPri = queues -> highPri;
+	ProcessList* lowPri = queues -> lowPri;
+	bool isHighPri = false;
+
+	// Check if there's process to be executed
+	if(highPri -> totalProcess) {
+		*processToExec = highPri -> head;
+		isHighPri = true;
+	} else if (lowPri -> totalProcess) {
+		*processToExec = lowPri -> head;
+	}
+
+	return isHighPri;
+}
+
+int executeProcess(Queues* queues, 
+				   ProcessList* notAlive, 
+				   unsigned int executionTime) {
 
 	ProcessList* highPri = queues -> highPri;
 	ProcessList* lowPri = queues -> lowPri;
-	ProcessNode* processToExec;
+	ProcessNode* processToExec = NULL;
 	bool isHighPri = false, transfered = false;
 	int currCpuTime = 0;
 	uint16_t pid;
 
 	// Check if there's process to be executed
-	if(highPri -> totalProcess) {
-		processToExec = highPri -> head;
-		isHighPri = true;
-	} else if (lowPri -> totalProcess) {
-		processToExec = lowPri -> head;
-	} else {
+    isHighPri = getProcessToExec(queues, &processToExec);
+
+	// If no processes in high or low queue, execute a tick and update other queues
+	if(!processToExec) {
+		if(notAlive -> totalProcess > 0)
+			checkIfAlive(notAlive, queues, executionTime + 1);
+
 		updateIO(queues, executionTime);
-		return 1;
+
+		// Check if high or low were updated
+		isHighPri = getProcessToExec(queues, &processToExec);
+
+		// If there's really no process, return a tick has passed
+		if(!processToExec)
+			return 1;
 	}
 
 	processToExec -> status = RUNNING;
@@ -255,9 +293,15 @@ int executeProcess(Queues* queues, unsigned int executionTime) {
 			break;
 		}
 	    
-		// Updates IO queue in real time
+		// Updates timer
 		processToExec -> executionTime++;
 		currCpuTime++;
+		
+		// Check if processe will become alive in real time
+		if(notAlive -> totalProcess > 0)
+			checkIfAlive(notAlive, queues, executionTime + currCpuTime);
+
+		// Updates IO queue in real time
 		updateIO(queues, executionTime + currCpuTime);	
 	}
 
@@ -375,22 +419,25 @@ void updateIO(Queues* queues, unsigned int execTime) {
 
 	ProcessList* IO = queues -> IO;
 	ProcessNode* aux = IO -> head;
+	bool transfered = false;
 
-	while(aux) {
-
-		aux -> timeUntilExec--;
-
+	if(aux) {
 		// Process is done with IO
 		if(aux -> timeUntilExec == 0) {
 			fromIOToExec(queues, aux -> process -> pid);
-			
+		
+			// Set transfered flag to true
+			transfered = true;
+
 			// Write process info after it has been transfered from IO queue
 			writeProcessInfo(queues -> buffer, 
 							 aux, 
 							 execTime);
 		}	
 
-		aux = aux -> next;
+		// Updates time until execution only if a process is still in IO queue
+		if(!transfered)
+			aux -> timeUntilExec--;
 	}
 }
 
