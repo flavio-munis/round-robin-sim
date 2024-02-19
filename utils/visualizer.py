@@ -1,13 +1,110 @@
-import json
 import sys
+import json
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def main(path):
-    fp = open(path, "r")
-    data = json.load(fp)
 
-    print(path)
-    fp.close()
+    # Opens output file and parses it
+    with open(path, 'r', encoding='utf-8') as fp:
+        dataJ = json.load(fp)
+
+    # Deep Parse json and create a DataFrame struct
+    dataNormalized = pd.json_normalize(dataJ['events'],
+                                       record_path=['processes'],
+                                       meta=['time_of_execution'])
+    
+    # Number os rows in json
+    setSize = dataNormalized.shape[0] - 1
+    
+    # Filters cpu info to plot graph and creates a DataFrame Object
+    cpu = getCpuDataStats(dataNormalized)
+    cpudf = pd.DataFrame(data={'pid': cpu[0],
+                                'Start': cpu[1],
+                                'Quantum': cpu[2]})
+
+
+    # Create plot struct
+    fig, axis = plt.subplots(2, 1, layout='constrained')
+
+    # Define CPU graph info 
+    axis[0].barh(y = cpudf["pid"], 
+             left=cpudf["Start"], 
+             width=cpudf["Quantum"])
+    #axis[0].set_xlabel("Quantum", fontsize=15, fontweight="bold")
+    axis[0].set_ylabel("PID", fontsize=15, fontweight="bold")
+    axis[0].set_title("CPU Usage", fontsize=20, fontweight="bold", pad=10)
+    axis[0].set_xlim(0, dataNormalized.loc[setSize].at["time_of_execution"])
+
+    # Filters disk info to plot graph and creates a DataFrame Object
+    disk = getDiskDataStats(dataNormalized)
+    diskdf = pd.DataFrame(data={'pid': disk[0],
+                                'Start': disk[1],
+                                'IO Time': disk[2]})
+
+    # Define Disk graph info 
+    axis[1].barh(y = diskdf["pid"], 
+             left=diskdf["Start"], 
+             width=diskdf["IO Time"])
+    #axis[1].set_xlabel("Quantum", fontsize=15, fontweight="bold")
+    axis[1].set_ylabel("PID", fontsize=15, fontweight="bold")
+    axis[1].set_title("Disk Usage", fontsize=20, fontweight="bold", pad=10)
+    axis[1].set_xlim(0, dataNormalized.loc[setSize].at["time_of_execution"])
+
+    # Plot Graphs
+    plt.show()
+    
+
+# Filters info for cpu graph
+def getCpuDataStats(dFrame):
+
+    pid = []
+    start = []
+    quantum = []
+
+    for i in range(0, dFrame.shape[0]):
+        dFrameLoc = dFrame.loc[i]
+
+        if dFrameLoc.at["status"] == "running":
+
+            pidTemp = dFrameLoc.at["pid"]
+            startTemp = dFrameLoc.at["time_of_execution"]
+            pid.append("Process " + str(pidTemp))
+            start.append(startTemp)
+
+            for j in range(i + 1, dFrame.shape[0]):
+                if dFrame.loc[j].at["pid"] == pidTemp:
+                    finishTemp = dFrame.loc[j].at["time_of_execution"]
+                    quantum.append(finishTemp - startTemp)
+                    break;
+    
+    return [pid, start, quantum]
+
+# Filters info for disk graph
+def getDiskDataStats(dFrame):
+    pid = []
+    start = []
+    IOtime = []
+
+    for i in range(0, dFrame.shape[0]):
+        dFrameLoc = dFrame.loc[i]
+
+        if dFrameLoc.at["status"] == "running_io":
+
+            pidTemp = dFrameLoc.at["pid"]
+            startTemp = dFrameLoc.at["time_of_execution"]
+            pid.append("Process " + str(pidTemp))
+            start.append(startTemp)
+
+            for j in range(i + 1, dFrame.shape[0]):
+                if dFrame.loc[j].at["pid"] == pidTemp:
+                    finishTemp = dFrame.loc[j].at["time_of_execution"]
+                    IOtime.append(finishTemp - startTemp)
+                    break;
+    
+    return [pid, start, IOtime]
+    
 
 if __name__ == "__main__":
-    for arg in sys.argv:
-        main(arg)
+    if len(sys.argv) == 2:
+        main(sys.argv[1])
