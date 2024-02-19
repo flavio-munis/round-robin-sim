@@ -195,6 +195,10 @@ void printProcessNode(ProcessNode* processNode) {
 			printf("RUNNING\n");
 			break;
 	
+	   case RUNNING_IO:
+			printf("RUNNING_IO\n");
+			break;
+
 	    case BLOCKED:
 			printf("BLOCKED\n");
 			break;

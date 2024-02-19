@@ -35,6 +35,7 @@ typedef enum {
 
 typedef enum {
 	RUNNING,
+	RUNNING_IO,
 	BLOCKED,
 	FINISHED,
 	READY,

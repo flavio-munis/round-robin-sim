@@ -397,7 +397,10 @@ void transferToIO(ProcessList* source, ProcessList* IO) {
 	unsigned int finishedIO = process -> finishedIO;
 	IO_types* IoAccess = process -> process -> ioList -> IoAccess;
 
-	process -> status = BLOCKED;
+	if(IO -> totalProcess > 0)
+		process -> status = BLOCKED;
+	else
+		process -> status = RUNNING_IO;
 	
 	switch(IoAccess[finishedIO]) {
 		case DISK:
@@ -426,6 +429,13 @@ void updateIO(Queues* queues, unsigned int execTime) {
 		// Process is done with IO
 		if(aux -> timeUntilExec == 0) {
 			fromIOToExec(queues, aux -> process -> pid);
+
+			if(IO -> totalProcess > 0) {
+				IO -> head -> status = RUNNING_IO;
+			    writeProcessInfo(&(queues -> buffer), 
+								 IO -> head, 
+								 execTime);
+			}
 		
 			// Set transfered flag to true
 			transfered = true;

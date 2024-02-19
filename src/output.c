@@ -185,6 +185,9 @@ char* statusToString(Process_status status) {
 		case RUNNING:
 			return "running";
 
+	    case RUNNING_IO:
+			return "running_io";
+
 		case BLOCKED:
 			return "blocked";
 
