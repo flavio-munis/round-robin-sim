@@ -18,7 +18,7 @@ def main(path):
     setSize = dataNormalized.shape[0] - 1
     
     # Filters cpu info to plot graph and creates a DataFrame Object
-    cpu = getCpuDataStats(dataNormalized)
+    cpu = getDataStats(dataNormalized, True)
     cpudf = pd.DataFrame(data={'pid': cpu[0],
                                 'Start': cpu[1],
                                 'Quantum': cpu[2]})
@@ -29,23 +29,27 @@ def main(path):
 
     # Define CPU graph info 
     axis[0].barh(y = cpudf["pid"], 
-             left=cpudf["Start"], 
-             width=cpudf["Quantum"])
+                 left=cpudf["Start"], 
+                 width=cpudf["Quantum"])
     #axis[0].set_xlabel("Quantum", fontsize=15, fontweight="bold")
     axis[0].set_ylabel("PID", fontsize=15, fontweight="bold")
     axis[0].set_title("CPU Usage", fontsize=20, fontweight="bold", pad=10)
     axis[0].set_xlim(0, dataNormalized.loc[setSize].at["time_of_execution"])
 
     # Filters disk info to plot graph and creates a DataFrame Object
-    disk = getDiskDataStats(dataNormalized)
+    disk = getDataStats(dataNormalized, False)
     diskdf = pd.DataFrame(data={'pid': disk[0],
                                 'Start': disk[1],
                                 'IO Time': disk[2]})
 
+    # Sort Data Frame by PID
+    diskdf.sort_values(by=['pid'],
+                       inplace=True)
+
     # Define Disk graph info 
     axis[1].barh(y = diskdf["pid"], 
-             left=diskdf["Start"], 
-             width=diskdf["IO Time"])
+                 left=diskdf["Start"], 
+                 width=diskdf["IO Time"])
     #axis[1].set_xlabel("Quantum", fontsize=15, fontweight="bold")
     axis[1].set_ylabel("PID", fontsize=15, fontweight="bold")
     axis[1].set_title("Disk Usage", fontsize=20, fontweight="bold", pad=10)
@@ -53,20 +57,26 @@ def main(path):
 
     # Plot Graphs
     plt.show()
+
+
+def getDataStats(dFrame, cpu):
     
-
-# Filters info for cpu graph
-def getCpuDataStats(dFrame):
-
     pid = []
     start = []
-    quantum = []
+    timeExec = []
+    isStatus = False
 
     for i in range(0, dFrame.shape[0]):
         dFrameLoc = dFrame.loc[i]
 
-        if dFrameLoc.at["status"] == "running":
+        if cpu:
+            if dFrameLoc.at["status"] == "running":
+                isStatus = True;
+        else:
+            if dFrameLoc.at["status"] == "running_io":
+                isStatus = True;
 
+        if isStatus:
             pidTemp = dFrameLoc.at["pid"]
             startTemp = dFrameLoc.at["time_of_execution"]
             pid.append("Process " + str(pidTemp))
@@ -75,36 +85,16 @@ def getCpuDataStats(dFrame):
             for j in range(i + 1, dFrame.shape[0]):
                 if dFrame.loc[j].at["pid"] == pidTemp:
                     finishTemp = dFrame.loc[j].at["time_of_execution"]
-                    quantum.append(finishTemp - startTemp)
+                    timeExec.append(finishTemp - startTemp)
                     break;
     
-    return [pid, start, quantum]
+            isStatus = False
 
-# Filters info for disk graph
-def getDiskDataStats(dFrame):
-    pid = []
-    start = []
-    IOtime = []
+    return [pid, start, timeExec]
 
-    for i in range(0, dFrame.shape[0]):
-        dFrameLoc = dFrame.loc[i]
-
-        if dFrameLoc.at["status"] == "running_io":
-
-            pidTemp = dFrameLoc.at["pid"]
-            startTemp = dFrameLoc.at["time_of_execution"]
-            pid.append("Process " + str(pidTemp))
-            start.append(startTemp)
-
-            for j in range(i + 1, dFrame.shape[0]):
-                if dFrame.loc[j].at["pid"] == pidTemp:
-                    finishTemp = dFrame.loc[j].at["time_of_execution"]
-                    IOtime.append(finishTemp - startTemp)
-                    break;
-    
-    return [pid, start, IOtime]
-    
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         main(sys.argv[1])
+    else:
+        print("Usage: python [program-name] [path-to-json]")
