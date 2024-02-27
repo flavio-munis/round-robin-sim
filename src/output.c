@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------*/
 /**
 
-  @file   scheduler.c
+  @file   output.c
   @author Flávio M.
-  @brief  Simulates scheduler running an round robin algorithm
+  @brief  Handle file output for all scheduler operations
  */
 /*-----------------------------------------------------------------*/
 
