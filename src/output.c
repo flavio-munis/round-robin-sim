@@ -2,7 +2,7 @@
 /**
 
   @file   scheduler.c
-  @author Flávio M. & Eduardo Barros
+  @author Flávio M.
   @brief  Simulates scheduler running an round robin algorithm
  */
 /*-----------------------------------------------------------------*/
