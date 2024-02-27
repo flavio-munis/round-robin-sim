@@ -44,6 +44,17 @@
 
 /*-----------------------------------------------------------------*/
 /**
+   @brief Checks if a Given File Pointer is NULL
+   @param p Is A File Pointer;
+
+   If Pointer is NULL, halts Program and prints an error message to user.
+ */
+/*-----------------------------------------------------------------*/
+#define checkNullFilePointer(p) if(!p) { FATAL_ERROR("Invalid File Pointer!"); } 
+
+
+/*-----------------------------------------------------------------*/
+/**
    @brief Throws an Error Message to User and Halts Program
    @param char* Custom Error Message
  */
