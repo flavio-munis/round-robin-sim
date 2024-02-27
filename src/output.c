@@ -15,9 +15,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "cJSON.h"
 #include "process.h"
 #include "error-handler.h"
+
+
+/*-----------------------------------------------------------------
+                             Definitions
+  -----------------------------------------------------------------*/
+#define PATH_TO_OUTPUT "output/output.json"
+#define CALL_FOR_UTIL "python3 utils/visualizer.py "
+#define SYSTEM_CALL_FOR_GRAPH CALL_FOR_UTIL PATH_TO_OUTPUT
+
 
 /*-----------------------------------------------------------------
                   Internal Functions Declarations
@@ -53,14 +64,22 @@ char* priorityToString(Priority);
 char* statusToString(Process_status);
 
 
+/*-----------------------------------------------------------------*/
+/**
+   @brief After output file is written calls graph visualization tool
+*/
+/*-----------------------------------------------------------------*/
+void showGraph();
+
+
 /*-----------------------------------------------------------------
                       Functions Implementation
   -----------------------------------------------------------------*/
 void writeToFile(cJSON *info){
 
 	char *jsonString;
-	FILE *fp = fopen("./output/output.json", "w");
-	checkNullPointer((void*) fp);
+	FILE *fp = fopen(PATH_TO_OUTPUT, "w");
+	checkNullFilePointer((void*) fp);
 
 	jsonString = cJSON_Print(info);
 	fprintf(fp, "%s", jsonString);
@@ -69,6 +88,21 @@ void writeToFile(cJSON *info){
 	
 	fclose(fp);
 	free(jsonString);
+
+	showGraph();
+}
+
+void showGraph() {
+
+	int pid = fork();
+	
+	if(pid == 0) {
+		if(system(SYSTEM_CALL_FOR_GRAPH) != 0)
+			unexpectedError("Graph Visualization Could Not Be Called!");
+    
+		exit(0);
+	} else 
+		wait(NULL);
 }
 
 void writeProcessInfo(cJSON** buffer, 
