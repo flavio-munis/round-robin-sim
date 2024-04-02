@@ -97,12 +97,17 @@ void showGraph() {
 	int pid = fork();
 	
 	if(pid == 0) {
+
+		puts("Loading Graph Visualization...");
+
+		if(setsid() < 0) 
+			unexpectedError("Couldn't Create Session for Child Process!");
+
 		if(system(SYSTEM_CALL_FOR_GRAPH) != 0)
 			unexpectedError("Graph Visualization Could Not Be Called!");
     
 		exit(0);
-	} else 
-		wait(NULL);
+	}
 }
 
 void writeProcessInfo(cJSON** buffer, 
